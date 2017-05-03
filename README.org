@@ -1,0 +1,61 @@
+* Intro
+  PhoenixClient is ready for use with Phoenix Framework v1.0.0. The PhoenixClient enables communication with a phoenix framework web project through the use of channels over websocket.
+
+  Learn more about the Phoenix Framework at http://www.phoenixframework.org/
+* Example Usage
+
+#+begin_src c++ :tangle yes
+#include "Network.h"
+#include "PhxChannel.h"
+#include "PhxPush.h"
+#include "PhxSocket.h"
+#include "easylogging++.h"
+#include <iostream>
+
+void Network::start() {
+    std::shared_ptr<PhxSocket::PhxSocket> socket
+        = std::make_shared<PhxSocket::PhxSocket>(
+            "ws://localhost:4000/socket/websocket", 1);
+    socket->setDelegate(this->shared_from_this());
+
+    this->channel = std::make_shared<PhxChannel::PhxChannel>(
+        socket, "room:1", std::map<std::string, std::string>());
+    this->channel->bootstrap();
+
+    // Instantiate the PhxChannel first before connecting on the socket.
+    // This is because the connection can happen before the channel
+    // is done instantiating.
+    socket->connect();
+}
+
+void Network::phxSocketDidOpen() {
+    LOG(INFO) << "phxSocketDidOpen";
+    this->channel->join()
+        ->onReceive("ok",
+            [](nlohmann::json json) {
+                LOG(INFO) << "Received OK on join:" << json.dump() << std::endl;
+            })
+        ->onReceive("error", [](nlohmann::json error) {
+            LOG(INFO) << "Error joining: " << error << std::endl;
+        });
+}
+
+void Network::phxSocketDidClose(const std::string& event) {
+    LOG(INFO) << "phxSocketDidClose" << std::endl;
+}
+
+void Network::phxSocketDidReceiveError(const std::string& error) {
+    LOG(INFO) << "phxSocketDidReceiveError" << std::endl;
+}
+#+end_src
+
+* Requirements
+** Json Library
+   https://github.com/nlohmann/json
+** Logging
+   https://github.com/muflihun/easyloggingpp
+** Websocket Client
+   https://github.com/dhbaird/easywsclient
+* Credit
+** ObjCPhoenixClient
+   https://github.com/livehelpnow/ObjCPhoenixClient

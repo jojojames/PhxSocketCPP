@@ -2,7 +2,8 @@
 #include "PhxPush.h"
 #include "PhxSocket.h"
 
-PhxChannel::PhxChannel(std::shared_ptr<PhxSocket> socket, std::string topic,
+PhxChannel::PhxChannel(std::shared_ptr<PhxSocket> socket,
+    std::string topic,
     std::map<std::string, std::string> params) {
     this->state = ChannelClosed;
     this->topic = topic;
@@ -72,8 +73,10 @@ void PhxChannel::leave() {
 }
 
 void PhxChannel::onClose(OnClose callback) {
-    this->onEvent("phx_close", [this, callback](nlohmann::json message,
-                                   int64_t ref) { callback(message); });
+    this->onEvent(
+        "phx_close", [this, callback](nlohmann::json message, int64_t ref) {
+            callback(message);
+        });
 }
 
 void PhxChannel::onError(OnError callback) {
@@ -89,7 +92,8 @@ void PhxChannel::onEvent(const std::string& event, OnReceive callback) {
 void PhxChannel::offEvent(const std::string& event) {
     // Remove all Event bindings that match event.
     std::vector<std::tuple<std::string, OnReceive>> v = this->bindings;
-    v.erase(std::remove_if(v.begin(), v.end(),
+    v.erase(std::remove_if(v.begin(),
+                v.end(),
                 [this, event](std::tuple<std::string, OnReceive> x) {
                     return std::get<0>(x) == event;
                 }),

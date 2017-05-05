@@ -110,7 +110,8 @@ public:
      *  \param params Params to send up to channel.
      *  \return PhxChannel
      */
-    PhxChannel(std::shared_ptr<PhxSocket> socket, std::string topic,
+    PhxChannel(std::shared_ptr<PhxSocket> socket,
+        std::string topic,
         std::map<std::string, std::string> params);
 
     /**

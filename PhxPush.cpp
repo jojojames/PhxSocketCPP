@@ -6,7 +6,8 @@
 #include <future>
 #include <thread>
 
-PhxPush::PhxPush(std::shared_ptr<PhxChannel> channel, std::string event,
+PhxPush::PhxPush(std::shared_ptr<PhxChannel> channel,
+    std::string event,
     std::map<std::string, std::string> payload) {
     this->channel = channel;
     this->event = event;

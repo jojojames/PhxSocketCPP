@@ -216,7 +216,8 @@ public:
      *  \param socket the Custom WebSocket implementation.
      *  \return return type
      */
-    PhxSocket(const std::string& url, int interval,
+    PhxSocket(const std::string& url,
+        int interval,
         std::shared_ptr<WebSocket> socket);
 
     /**

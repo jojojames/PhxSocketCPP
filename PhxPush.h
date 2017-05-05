@@ -104,7 +104,8 @@ public:
      *  \param payload The Payload to send.
      *  \return PhxPush
      */
-    PhxPush(std::shared_ptr<PhxChannel> channel, std::string event,
+    PhxPush(std::shared_ptr<PhxChannel> channel,
+        std::string event,
         std::map<std::string, std::string> payload);
 
     /**

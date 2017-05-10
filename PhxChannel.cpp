@@ -5,7 +5,7 @@
 PhxChannel::PhxChannel(std::shared_ptr<PhxSocket> socket,
     const std::string& topic,
     std::map<std::string, std::string> params) {
-    this->state = ChannelClosed;
+    this->state = ChannelState::CLOSED;
     this->topic = topic;
     this->params = params;
     this->socket = socket;
@@ -20,19 +20,19 @@ void PhxChannel::bootstrap() {
     this->socket->onOpen([this]() { this->rejoin(); });
 
     this->socket->onClose([this](const std::string& event) {
-        this->state = ChannelClosed;
+        this->state = ChannelState::CLOSED;
         this->socket->removeChannel(this->shared_from_this());
     });
 
-    this->socket->onError(
-        [this](const std::string& error) { this->state = ChannelErrored; });
+    this->socket->onError([this](
+        const std::string& error) { this->state = ChannelState::ERRORED; });
 
     std::shared_ptr<PhxPush> n = std::make_shared<PhxPush>(
         this->shared_from_this(), "phx_join", this->params);
     this->joinPush = std::move(n);
 
-    this->joinPush->onReceive(
-        "ok", [this](nlohmann::json message) { this->state = ChannelJoined; });
+    this->joinPush->onReceive("ok",
+        [this](nlohmann::json message) { this->state = ChannelState::JOINED; });
 
     this->onEvent("phx_reply", [this](nlohmann::json message, int64_t ref) {
         this->triggerEvent(this->replyEventName(ref), message, ref);
@@ -51,20 +51,20 @@ std::shared_ptr<PhxPush> PhxChannel::join() {
 }
 
 void PhxChannel::rejoin() {
-    if (this->joinedOnce && this->state != ChannelJoining
-        && this->state != ChannelJoined) {
+    if (this->joinedOnce && this->state != ChannelState::JOINING
+        && this->state != ChannelState::JOINED) {
         this->sendJoin();
     }
 }
 
 void PhxChannel::sendJoin() {
-    this->state = ChannelJoining;
+    this->state = ChannelState::JOINING;
     this->joinPush->setPayload(this->params);
     this->joinPush->send();
 }
 
 void PhxChannel::leave() {
-    this->state = ChannelClosed;
+    this->state = ChannelState::CLOSED;
     std::map<std::string, std::string> payload;
     this->pushEvent("phx_leave", payload)
         ->onReceive("ok", [this](nlohmann::json message) {

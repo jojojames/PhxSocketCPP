@@ -5,12 +5,7 @@
 #include <functional>
 #include <string>
 
-typedef enum {
-    ChannelClosed,
-    ChannelErrored,
-    ChannelJoining,
-    ChannelJoined
-} ChannelState;
+enum class ChannelState { CLOSED, ERRORED, JOINING, JOINED };
 
 typedef std::function<void()> OnOpen;
 typedef std::function<void(const std::string& event)> OnClose;

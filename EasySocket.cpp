@@ -23,7 +23,7 @@ void EasySocket::open() {
         });
         errorThread.detach();
 
-        this->socket = NULL;
+        this->socket = nullptr;
         return;
     }
 
@@ -87,7 +87,7 @@ void EasySocket::open() {
             }
         }
 
-        this->socket = NULL;
+        this->socket = nullptr;
     });
 
     worker.detach();

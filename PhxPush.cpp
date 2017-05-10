@@ -21,7 +21,7 @@ PhxPush::PhxPush(std::shared_ptr<PhxChannel> channel,
 void PhxPush::send() {
     int64_t ref = this->channel->getSocket()->makeRef();
     this->refEvent = this->channel->replyEventName(ref);
-    this->receivedResp = NULL;
+    this->receivedResp = nullptr;
     this->sent = false;
 
     // FIXME: Should this be weak?

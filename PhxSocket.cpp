@@ -118,9 +118,9 @@ void PhxSocket::discardReconnectTimer() {
 
 void PhxSocket::disconnectSocket() {
     if (this->socket) {
-        this->socket->setDelegate(NULL);
+        this->socket->setDelegate(nullptr);
         this->socket->close();
-        this->socket = NULL;
+        this->socket = nullptr;
     }
 }
 

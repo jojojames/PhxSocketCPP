@@ -54,9 +54,7 @@ std::shared_ptr<PhxPush> PhxPush::onReceive(
         callback(this->receivedResp);
     }
 
-    std::tuple<std::string, OnMessage> tuple
-        = std::make_tuple(status, callback);
-    this->recHooks.emplace_back(tuple);
+    this->recHooks.emplace_back(status, callback);
     return this->shared_from_this();
 }
 

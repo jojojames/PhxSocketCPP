@@ -85,8 +85,7 @@ void PhxChannel::onError(OnError callback) {
 }
 
 void PhxChannel::onEvent(const std::string& event, OnReceive callback) {
-    std::tuple<std::string, OnReceive> tuple = std::make_tuple(event, callback);
-    this->bindings.emplace_back(tuple);
+    this->bindings.emplace_back(event, callback);
 }
 
 void PhxChannel::offEvent(const std::string& event) {

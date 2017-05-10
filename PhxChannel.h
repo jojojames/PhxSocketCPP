@@ -111,7 +111,7 @@ public:
      *  \return PhxChannel
      */
     PhxChannel(std::shared_ptr<PhxSocket> socket,
-        std::string topic,
+        const std::string& topic,
         std::map<std::string, std::string> params);
 
     /**

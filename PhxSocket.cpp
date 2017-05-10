@@ -296,7 +296,7 @@ void PhxSocket::webSocketDidError(WebSocket* socket, const std::string& error) {
 }
 
 void PhxSocket::webSocketDidClose(
-    WebSocket* socket, int code, std::string reason, bool wasClean) {
+    WebSocket* socket, int code, const std::string& reason, bool wasClean) {
     this->onConnClose(reason);
 }
 

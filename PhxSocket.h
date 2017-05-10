@@ -186,7 +186,7 @@ private:
     void webSocketDidReceive(WebSocket* socket, const std::string& message);
     void webSocketDidError(WebSocket* socket, const std::string& error);
     void webSocketDidClose(
-        WebSocket* socket, int code, std::string reason, bool wasClean);
+        WebSocket* socket, int code, const std::string& reason, bool wasClean);
     // SocketDelegate
 
 public:

@@ -205,8 +205,7 @@ public:
      *  \param url The URL to connect to.
      *  \return PhxSocket
      */
-    PhxSocket(const std::string& url)
-        : PhxSocket(url, 1){};
+    PhxSocket(const std::string& url);
 
     /**
      *  \brief Constructor with custom WebSocket implementation.

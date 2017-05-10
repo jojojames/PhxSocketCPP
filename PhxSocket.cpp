@@ -14,6 +14,10 @@ PhxSocket::PhxSocket(const std::string& url, int interval) {
     this->reconnectOnError = true;
 }
 
+PhxSocket::PhxSocket(const std::string& url)
+    : PhxSocket(url, 1) {
+}
+
 PhxSocket::PhxSocket(
     const std::string& url, int interval, std::shared_ptr<WebSocket> socket) {
     this->url = url;

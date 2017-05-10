@@ -7,11 +7,11 @@
 
 enum class ChannelState { CLOSED, ERRORED, JOINING, JOINED };
 
-typedef std::function<void()> OnOpen;
-typedef std::function<void(const std::string& event)> OnClose;
-typedef std::function<void(const std::string& error)> OnError;
-typedef std::function<void(nlohmann::json json)> OnMessage;
-typedef std::function<void(nlohmann::json message, int64_t ref)> OnReceive;
-typedef std::function<void()> After;
+using OnOpen = std::function<void()>;
+using OnClose = std::function<void(const std::string& event)>;
+using OnError = std::function<void(const std::string& error)>;
+using OnMessage = std::function<void(nlohmann::json json)>;
+using OnReceive = std::function<void(nlohmann::json message, int64_t ref)>;
+using After = std::function<void()>;
 
 #endif

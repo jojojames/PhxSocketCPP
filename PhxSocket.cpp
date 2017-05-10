@@ -44,7 +44,7 @@ void PhxSocket::connect(std::map<std::string, std::string> params) {
     this->setCanReconnect(false);
 
     // The socket hasn't been instantiated with a custom WebSocket.
-    if (this->socket == nullptr) {
+    if (!this->socket) {
         std::shared_ptr<EasySocket> socket
             = std::make_shared<EasySocket>(url, this);
         this->socket = std::dynamic_pointer_cast<WebSocket, EasySocket>(socket);

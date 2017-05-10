@@ -4,6 +4,13 @@
 #include <iostream>
 #include <thread>
 
+// Make sure to implement this constructor if you take out the
+// Base class constructor call.
+// Otherwise, it'll throw `symbol not found` exceptions when compiling.
+EasySocket::EasySocket(const std::string& url, SocketDelegate* delegate)
+    : WebSocket(url, delegate) {
+}
+
 void EasySocket::open() {
     easywsclient::WebSocket::pointer socket
         = easywsclient::WebSocket::from_url(this->url);

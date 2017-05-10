@@ -33,9 +33,7 @@ public:
     // Make sure to implement this constructor if you take out the
     // Base class constructor call.
     // Otherwise, it'll throw `symbol not found` exceptions when compiling.
-    EasySocket(const std::string& url, SocketDelegate* delegate)
-        : WebSocket(url, delegate) {
-    }
+    EasySocket(const std::string& url, SocketDelegate* delegate);
 
     // WebSocket
     void open();

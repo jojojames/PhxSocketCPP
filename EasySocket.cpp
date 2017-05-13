@@ -17,8 +17,9 @@ void EasySocket::open() {
 
     if (!socket) {
         std::thread errorThread([this]() {
-            if (this->delegate) {
-                this->delegate->webSocketDidError(this, "");
+            SocketDelegate* d = this->delegate;
+            if (d) {
+                d->webSocketDidError(this, "");
             }
         });
         errorThread.detach();
@@ -49,8 +50,9 @@ void EasySocket::open() {
             switch (ws->getReadyState()) {
             case easywsclient::WebSocket::CLOSED: {
                 std::thread closeThread([this]() {
-                    if (this->delegate) {
-                        this->delegate->webSocketDidClose(this, 0, "", true);
+                    SocketDelegate* d = this->delegate;
+                    if (d) {
+                        d->webSocketDidClose(this, 0, "", true);
                     }
                 });
                 closeThread.detach();
@@ -73,9 +75,9 @@ void EasySocket::open() {
                 if (!triggeredWebsocketJoinedCallback) {
                     triggeredWebsocketJoinedCallback = true;
                     this->getSocketState();
-
-                    if (this->delegate) {
-                        this->delegate->webSocketDidOpen(this);
+                    SocketDelegate* d = this->delegate;
+                    if (d) {
+                        d->webSocketDidOpen(this);
                     }
                 }
 
@@ -119,8 +121,9 @@ void EasySocket::handleMessage(const std::string& message) {
     LOG(INFO) << "EasySocket::handleMessage: " << message << std::endl;
     std::thread thread([this, message]() {
         std::lock_guard<std::mutex> guard(this->receiveMutex);
-        if (this->delegate) {
-            this->delegate->webSocketDidReceive(this, message);
+        SocketDelegate* d = this->delegate;
+        if (d) {
+            d->webSocketDidReceive(this, message);
         }
     });
     thread.detach();

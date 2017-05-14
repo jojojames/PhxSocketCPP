@@ -166,23 +166,26 @@ void PhxSocket::onConnClose(const std::string& event) {
 
     // When connection is closed, attempt to reconnect.
     if (this->reconnectOnError) {
-        this->discardReconnectTimer();
+        std::lock_guard<std::mutex> guard(this->reconnectMutex);
+        if (!this->reconnecting) {
+            this->reconnecting = true;
+            this->canReconnect = true;
 
-        std::thread thread([this]() {
-            this->setCanReconnect(true);
-            while (true) {
+            std::thread thread([this]() {
                 std::this_thread::sleep_for(
                     std::chrono::seconds{ RECONNECT_INTERVAL });
                 std::lock_guard<std::mutex> guard(this->reconnectMutex);
-                if (this->canReconnect) {
-                    this->reconnect();
-                } else {
-                    break;
-                }
-            }
-        });
 
-        thread.detach();
+                if (this->canReconnect) {
+                    this->canReconnect = false;
+                    this->reconnect();
+                }
+
+                this->reconnecting = false;
+            });
+
+            thread.detach();
+        }
     }
 
     this->discardHeartBeatTimer();

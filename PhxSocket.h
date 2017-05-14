@@ -97,11 +97,14 @@ private:
      */
     void discardReconnectTimer();
 
-    /*!< Mutex used when setting this->canReconnect. */
+    /*!< Mutex used when reconnecting. */
     std::mutex reconnectMutex;
 
     /*!< Flag indicating whether or not socket can reconnect to server. */
     bool canReconnect;
+
+    /*!< Flag indicating whether or not we are in the process of reconnecting. */
+    bool reconnecting;
 
     /**
      *  \brief Disconnects the socket.

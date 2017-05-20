@@ -91,6 +91,8 @@ void Network::phxSocketDidReceiveError(const std::string& error) {
    https://github.com/muflihun/easyloggingpp
 ** Websocket Client
    https://github.com/dhbaird/easywsclient
+** Thread Pool
+   https://github.com/progschj/ThreadPool
 * Credit
 ** ObjCPhoenixClient
    https://github.com/livehelpnow/ObjCPhoenixClient

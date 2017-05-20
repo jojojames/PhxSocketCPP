@@ -10,21 +10,21 @@
 #define EasySocket_H
 
 #include "SocketDelegate.h"
+#include "ThreadPool.h"
 #include "WebSocket.h"
 #include "easywsclient.hpp"
-#include <mutex>
 #include <string>
 
 class EasySocket : public WebSocket {
 private:
+    /*!< Queue used for synchronization when sending messages. */
+    ThreadPool sendingQueue;
+
+    /*!< Queue used for synchronization when receiving messages. */
+    ThreadPool receiveQueue;
+
     /*!< The underlying socket EasySocket wraps. */
     easywsclient::WebSocket::pointer socket;
-
-    /*!< The mutex used when sending messages over the socket. */
-    std::mutex sendMutex;
-
-    /*!< The mutex used when receiving messages from the socket. */
-    std::mutex receiveMutex;
 
     /*!< Function used to trigger WebSocket::webSocketDidReceive. */
     void handleMessage(const std::string& message);

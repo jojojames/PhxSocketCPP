@@ -1,6 +1,7 @@
 #include "PhxSocket.h"
 #include "EasySocket.h"
 #include "PhxChannel.h"
+#include "ThreadPool.h"
 #include <algorithm>
 #include <chrono>
 #include <future>
@@ -8,7 +9,10 @@
 #include <string>
 #include <thread>
 
-PhxSocket::PhxSocket(const std::string& url, int interval) {
+#define POOL_SIZE 1
+
+PhxSocket::PhxSocket(const std::string& url, int interval)
+    : pool(POOL_SIZE) {
     this->url = url;
     this->heartBeatInterval = interval;
     this->reconnectOnError = true;
@@ -19,7 +23,8 @@ PhxSocket::PhxSocket(const std::string& url)
 }
 
 PhxSocket::PhxSocket(
-    const std::string& url, int interval, std::shared_ptr<WebSocket> socket) {
+    const std::string& url, int interval, std::shared_ptr<WebSocket> socket)
+    : pool(POOL_SIZE) {
     this->url = url;
     this->heartBeatInterval = interval;
     this->reconnectOnError = true;
@@ -139,9 +144,9 @@ void PhxSocket::onConnOpen() {
             while (true) {
                 std::this_thread::sleep_for(
                     std::chrono::seconds{ this->heartBeatInterval });
-                std::lock_guard<std::mutex> guard(this->sendHeartbeatMutex);
+
                 if (this->canSendHeartbeat) {
-                    this->sendHeartbeat();
+                    this->pool.enqueue([this]() { this->sendHeartbeat(); });
                 } else {
                     break;
                 }
@@ -166,7 +171,6 @@ void PhxSocket::onConnClose(const std::string& event) {
 
     // When connection is closed, attempt to reconnect.
     if (this->reconnectOnError) {
-        std::lock_guard<std::mutex> guard(this->reconnectMutex);
         if (!this->reconnecting) {
             this->reconnecting = true;
             this->canReconnect = true;
@@ -174,14 +178,17 @@ void PhxSocket::onConnClose(const std::string& event) {
             std::thread thread([this]() {
                 std::this_thread::sleep_for(
                     std::chrono::seconds{ RECONNECT_INTERVAL });
-                std::lock_guard<std::mutex> guard(this->reconnectMutex);
 
-                if (this->canReconnect) {
-                    this->canReconnect = false;
-                    this->reconnect();
-                }
+                this->pool
+                    .enqueue([this]() {
+                        if (this->canReconnect) {
+                            this->canReconnect = false;
+                            this->reconnect();
+                        }
 
-                this->reconnecting = false;
+                        this->reconnecting = false;
+                    })
+                    .get();
             });
 
             thread.detach();
@@ -266,41 +273,34 @@ void PhxSocket::setDelegate(std::shared_ptr<PhxSocketDelegate> delegate) {
 }
 
 void PhxSocket::setCanReconnect(bool canReconnect) {
-    std::thread thread([this, canReconnect]() {
-        std::lock_guard<std::mutex> guard(this->reconnectMutex);
-        this->canReconnect = canReconnect;
-    });
-
-    thread.detach();
+    this->pool.enqueue(
+        [this, canReconnect]() { this->canReconnect = canReconnect; });
 }
 
 void PhxSocket::setCanSendHeartBeat(bool canSendHeartbeat) {
-    std::thread thread([this, canSendHeartbeat]() {
-        std::lock_guard<std::mutex> guard(this->sendHeartbeatMutex);
+    this->pool.enqueue([this, canSendHeartbeat]() {
         this->canSendHeartbeat = canSendHeartbeat;
     });
-
-    thread.detach();
 }
 
 // SocketDelegate
 
 void PhxSocket::webSocketDidOpen(WebSocket* socket) {
-    this->onConnOpen();
+    this->pool.enqueue([this]() { this->onConnOpen(); });
 }
 
 void PhxSocket::webSocketDidReceive(
     WebSocket* socket, const std::string& message) {
-    this->onConnMessage(message);
+    this->pool.enqueue([this, message]() { this->onConnMessage(message); });
 }
 
 void PhxSocket::webSocketDidError(WebSocket* socket, const std::string& error) {
-    this->onConnError(error);
+    this->pool.enqueue([this, error]() { this->onConnError(error); });
 }
 
 void PhxSocket::webSocketDidClose(
     WebSocket* socket, int code, const std::string& reason, bool wasClean) {
-    this->onConnClose(reason);
+    this->pool.enqueue([this, reason]() { this->onConnClose(reason); });
 }
 
 // SocketDelegate

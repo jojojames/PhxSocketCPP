@@ -10,10 +10,10 @@
 
 #include "PhxTypes.h"
 #include "SocketDelegate.h"
+#include "ThreadPool.h"
 #include "WebSocket.h"
 #include <map>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -37,6 +37,9 @@ class WebSocket;
 
 class PhxSocket : public SocketDelegate {
 private:
+    /*!< Single Thread Thread Pool used for synchronization. */
+    ThreadPool pool;
+
     /*! Delegate that can listen in on Phoenix related callbacks. */
     std::weak_ptr<PhxSocketDelegate> delegate;
 
@@ -84,9 +87,6 @@ private:
      */
     void discardHeartBeatTimer();
 
-    /*!< Mutex used when setting this->canSendHeartbeat. */
-    std::mutex sendHeartbeatMutex;
-
     /*!< Flag indicating whether or not to continue sending heartbeats. */
     bool canSendHeartbeat;
 
@@ -97,13 +97,11 @@ private:
      */
     void discardReconnectTimer();
 
-    /*!< Mutex used when reconnecting. */
-    std::mutex reconnectMutex;
-
     /*!< Flag indicating whether or not socket can reconnect to server. */
     bool canReconnect;
 
-    /*!< Flag indicating whether or not we are in the process of reconnecting. */
+    /*!< Flag indicating whether or not we are in the process of reconnecting.
+     */
     bool reconnecting;
 
     /**
@@ -163,8 +161,6 @@ private:
      *  \brief Sets this->canSendHeartbeat.
      *
      *  This is intended to be a semi-thread safe way to set this flag.
-     *  The current thread must lock on this->sendHeartbeatMutex to set this
-     * variable.
      *
      *  \param canSendHeartbeat Indicating whether or not this socket can
      *  continue sending heartbeats.
@@ -176,8 +172,6 @@ private:
      *  \brief Sets this->canReconnect.
      *
      *  This is intended to be a semi-thread safe way to set this flag.
-     *  The current thread must lock on this->reconnectMutex to set this
-     * variable.
      *
      *  \param canReconnect Indicating whether or not the socket can reconnect.
      *  \return void
@@ -191,7 +185,6 @@ private:
     void webSocketDidClose(
         WebSocket* socket, int code, const std::string& reason, bool wasClean);
     // SocketDelegate
-
 public:
     /**
      *  \brief Constructor

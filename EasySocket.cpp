@@ -8,7 +8,9 @@
 // Base class constructor call.
 // Otherwise, it'll throw `symbol not found` exceptions when compiling.
 EasySocket::EasySocket(const std::string& url, SocketDelegate* delegate)
-    : WebSocket(url, delegate) {
+    : WebSocket(url, delegate)
+    , sendingQueue(1)
+    , receiveQueue(1) {
 }
 
 void EasySocket::open() {
@@ -105,28 +107,23 @@ void EasySocket::close() {
 }
 
 void EasySocket::send(const std::string& message) {
-    // Opening a new thread per message might by a little heavy.
-    std::thread thread([this, message]() {
-        std::lock_guard<std::mutex> guard(this->sendMutex);
+    this->sendingQueue.enqueue([this, message]() {
         // Grab a copy of the pointer in case it gets NULLed out.
         easywsclient::WebSocket::pointer sock = this->socket;
         if (sock) {
             sock->send(message);
         }
     });
-    thread.detach();
 }
 
 void EasySocket::handleMessage(const std::string& message) {
-    LOG(INFO) << "EasySocket::handleMessage: " << message << std::endl;
-    std::thread thread([this, message]() {
-        std::lock_guard<std::mutex> guard(this->receiveMutex);
+    LOG(INFO) << message + "\n";
+    this->receiveQueue.enqueue([this, message]() {
         SocketDelegate* d = this->delegate;
         if (d) {
             d->webSocketDidReceive(this, message);
         }
     });
-    thread.detach();
 }
 
 SocketState EasySocket::getSocketState() {

@@ -110,8 +110,6 @@ SocketState PhxSocket::socketState() {
 }
 
 void PhxSocket::push(nlohmann::json data) {
-    // FIXME: Does it make sense to push this on to another thread first?
-    // The Objective-C version kicked it into a separate queue.
     this->socket->send(data.dump());
 }
 
@@ -179,16 +177,14 @@ void PhxSocket::onConnClose(const std::string& event) {
                 std::this_thread::sleep_for(
                     std::chrono::seconds{ RECONNECT_INTERVAL });
 
-                this->pool
-                    .enqueue([this]() {
-                        if (this->canReconnect) {
-                            this->canReconnect = false;
-                            this->reconnect();
-                        }
+                this->pool.enqueue([this]() {
+                    if (this->canReconnect) {
+                        this->canReconnect = false;
+                        this->reconnect();
+                    }
 
-                        this->reconnecting = false;
-                    })
-                    .get();
+                    this->reconnecting = false;
+                });
             });
 
             thread.detach();

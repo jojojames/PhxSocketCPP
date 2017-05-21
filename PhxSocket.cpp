@@ -245,7 +245,7 @@ void PhxSocket::onConnMessage(const std::string& rawMessage) {
 }
 
 void PhxSocket::triggerChanError(const std::string& error) {
-    for (int i = 0; i < this->channels.size(); ++i) {
+    for (int i = 0; i < this->channels.size(); i++) {
         std::shared_ptr<PhxChannel> channel = this->channels.at(i);
         channel->triggerEvent("phx_error", error, 0);
     }

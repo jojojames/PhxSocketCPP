@@ -65,7 +65,7 @@ void PhxChannel::sendJoin() {
 
 void PhxChannel::leave() {
     this->state = ChannelState::CLOSED;
-    std::map<std::string, std::string> payload;
+    nlohmann::json payload;
     this->pushEvent("phx_leave", payload)
         ->onReceive("ok", [this](nlohmann::json message) {
             this->triggerEvent("phx_close", "leave", -1);
@@ -115,7 +115,8 @@ void PhxChannel::triggerEvent(
 }
 
 std::shared_ptr<PhxPush> PhxChannel::pushEvent(
-    const std::string& event, std::map<std::string, std::string> payload) {
+    const std::string& event,
+    nlohmann::json payload) {
     std::shared_ptr<PhxPush> p
         = std::make_shared<PhxPush>(this->shared_from_this(), event, payload);
     p->send();

@@ -30,7 +30,7 @@ private:
     std::string refEvent;
 
     /*!< Holds the payload that will be sent to the server. */
-    std::map<std::string, std::string> payload;
+    nlohmann::json payload;
 
     /*!< The callback to trigger if event is not returned from server. */
     After afterHook;
@@ -94,7 +94,7 @@ public:
      *  \param payload
      *  \return void
      */
-    void setPayload(std::map<std::string, std::string> payload);
+    void setPayload(nlohmann::json payload);
 
     /**
      *  \brief Constructor
@@ -105,8 +105,8 @@ public:
      *  \return PhxPush
      */
     PhxPush(std::shared_ptr<PhxChannel> channel,
-        std::string event,
-        std::map<std::string, std::string> payload);
+        const std::string& event,
+        nlohmann::json payload);
 
     /**
      *  \brief Sends Phoenix Formatted message with payload through Websockets.

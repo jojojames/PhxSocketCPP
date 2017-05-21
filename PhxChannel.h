@@ -191,7 +191,7 @@ public:
      *  \return std::shared_ptr<PhxPush>
      */
     std::shared_ptr<PhxPush> pushEvent(
-        const std::string& event, std::map<std::string, std::string> payload);
+        const std::string& event, nlohmann::json payload);
 
     /**
      *  \brief Gets the topic of the channel.

@@ -106,7 +106,12 @@ int64_t PhxSocket::makeRef() {
 }
 
 SocketState PhxSocket::socketState() {
-    return this->socket->getSocketState();
+    std::shared_ptr<WebSocket> sk = this->socket;
+    if (!sk) {
+        return SocketClosed;
+    }
+
+    return sk->getSocketState();
 }
 
 void PhxSocket::push(nlohmann::json data) {

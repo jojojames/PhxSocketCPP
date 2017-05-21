@@ -11,6 +11,7 @@ EasySocket::EasySocket(const std::string& url, SocketDelegate* delegate)
     : WebSocket(url, delegate)
     , sendingQueue(1)
     , receiveQueue(1) {
+    this->state = SocketClosed;
 }
 
 void EasySocket::open() {
@@ -18,6 +19,7 @@ void EasySocket::open() {
         = easywsclient::WebSocket::from_url(this->url);
 
     if (!socket) {
+        this->state = SocketClosed;
         std::thread errorThread([this]() {
             SocketDelegate* d = this->delegate;
             if (d) {
@@ -51,6 +53,7 @@ void EasySocket::open() {
         while (shouldContinueLoop) {
             switch (ws->getReadyState()) {
             case easywsclient::WebSocket::CLOSED: {
+                this->state = SocketClosed;
                 std::thread closeThread([this]() {
                     SocketDelegate* d = this->delegate;
                     if (d) {
@@ -64,16 +67,19 @@ void EasySocket::open() {
                 break;
             }
             case easywsclient::WebSocket::CLOSING: {
+                this->state = SocketClosing;
                 ws->poll();
                 ws->dispatch(callable);
                 break;
             }
             case easywsclient::WebSocket::CONNECTING: {
+                this->state = SocketConnecting;
                 ws->poll();
                 ws->dispatch(callable);
                 break;
             }
             case easywsclient::WebSocket::OPEN: {
+                this->state = SocketOpen;
                 if (!triggeredWebsocketJoinedCallback) {
                     triggeredWebsocketJoinedCallback = true;
                     this->getSocketState();
@@ -91,6 +97,7 @@ void EasySocket::open() {
             }
         }
 
+        this->state = SocketClosed;
         this->socket = nullptr;
     });
 
@@ -98,6 +105,7 @@ void EasySocket::open() {
 }
 
 void EasySocket::close() {
+    this->state = SocketClosed;
     // Was already closed or never opened.
     if (!this->socket) {
         return;
@@ -110,7 +118,7 @@ void EasySocket::send(const std::string& message) {
     this->sendingQueue.enqueue([this, message]() {
         // Grab a copy of the pointer in case it gets NULLed out.
         easywsclient::WebSocket::pointer sock = this->socket;
-        if (sock) {
+        if (sock && this->state == SocketOpen) {
             sock->send(message);
         }
     });
@@ -127,24 +135,9 @@ void EasySocket::handleMessage(const std::string& message) {
 }
 
 SocketState EasySocket::getSocketState() {
-    if (!this->socket) {
-        return SocketClosed;
-    }
-
-    switch (this->socket->getReadyState()) {
-    case easywsclient::WebSocket::CLOSING: {
-        return SocketClosing;
-    }
-    case easywsclient::WebSocket::CLOSED: {
-        return SocketClosed;
-    }
-    case easywsclient::WebSocket::CONNECTING: {
-        return SocketConnecting;
-    }
-    case easywsclient::WebSocket::OPEN: {
-        return SocketOpen;
-    }
-    }
+    // easywsclient's State code is seemingly unreliable.
+    // So we manage it ourselves.
+    return this->state;
 }
 
 void EasySocket::setDelegate(SocketDelegate* delegate) {

@@ -26,9 +26,17 @@ private:
     /*!< The underlying socket EasySocket wraps. */
     easywsclient::WebSocket::pointer socket;
 
-    /*!< Function used to trigger WebSocket::webSocketDidReceive. */
-    void handleMessage(const std::string& message);
+    /*!< Keep track of Socket State.
+      This is used instead of easywsclient's SocketState. */
+    SocketState state;
 
+    /**
+     *  \brief Function used to trigger WebSocket::webSocketDidReceive.
+     *
+     *  \param message received.
+     *  \return void
+     */
+    void handleMessage(const std::string& message);
 public:
     // Make sure to implement this constructor if you take out the
     // Base class constructor call.

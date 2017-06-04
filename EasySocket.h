@@ -17,11 +17,11 @@
 
 class EasySocket : public WebSocket {
 private:
-    /*!< Queue used for synchronization when sending messages. */
-    ThreadPool sendingQueue;
-
-    /*!< Queue used for synchronization when receiving messages. */
+    /*!< Queue used for receiving messages. */
     ThreadPool receiveQueue;
+
+    /*!< The mutex used when sending/polling messages over the socket. */
+    std::mutex socketMutex;
 
     /*!< The underlying socket EasySocket wraps. */
     easywsclient::WebSocket::pointer socket;
@@ -37,6 +37,7 @@ private:
      *  \return void
      */
     void handleMessage(const std::string& message);
+
 public:
     // Make sure to implement this constructor if you take out the
     // Base class constructor call.

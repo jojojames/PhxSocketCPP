@@ -9,7 +9,6 @@
 // Otherwise, it'll throw `symbol not found` exceptions when compiling.
 EasySocket::EasySocket(const std::string& url, SocketDelegate* delegate)
     : WebSocket(url, delegate)
-    , sendingQueue(1)
     , receiveQueue(1) {
     this->state = SocketClosed;
 }
@@ -68,12 +67,14 @@ void EasySocket::open() {
             }
             case easywsclient::WebSocket::CLOSING: {
                 this->state = SocketClosing;
+                std::lock_guard<std::mutex> guard(this->socketMutex);
                 ws->poll();
                 ws->dispatch(callable);
                 break;
             }
             case easywsclient::WebSocket::CONNECTING: {
                 this->state = SocketConnecting;
+                std::lock_guard<std::mutex> guard(this->socketMutex);
                 ws->poll();
                 ws->dispatch(callable);
                 break;
@@ -89,6 +90,7 @@ void EasySocket::open() {
                     }
                 }
 
+                std::lock_guard<std::mutex> guard(this->socketMutex);
                 ws->poll();
                 ws->dispatch(callable);
                 break;
@@ -115,13 +117,15 @@ void EasySocket::close() {
 }
 
 void EasySocket::send(const std::string& message) {
-    this->sendingQueue.enqueue([this, message]() {
+    std::thread thread([this, message]() {
+        std::lock_guard<std::mutex> guard(this->socketMutex);
         // Grab a copy of the pointer in case it gets NULLed out.
         easywsclient::WebSocket::pointer sock = this->socket;
         if (sock && this->state == SocketOpen) {
             sock->send(message);
         }
     });
+    thread.detach();
 }
 
 void EasySocket::handleMessage(const std::string& message) {
